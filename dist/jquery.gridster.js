@@ -2493,6 +2493,15 @@
         var row = this.placeholder_grid_data.row;
 
         this.set_cells_player_occupies(col, row);
+
+        if( this.grfix_queue != []){
+
+            for (var i = 0; i< this.grfix_queue.length; i++) {
+                this.add_to_gridmap(this.grfix_queue[i].gridmap, this.grfix_queue[i].widget);
+            }
+            this.grfix_queue = [];
+        }
+
         this.$player.coords().grid.row = row;
         this.$player.coords().grid.col = col;
 
@@ -2518,6 +2527,7 @@
         this.cells_occupied_by_placeholder = {};
         this.cells_occupied_by_player = {};
         this.w_queue = {};
+        this.grfix_queue = [];
 
         this.set_dom_grid_height();
         this.set_dom_grid_width();
@@ -3811,9 +3821,16 @@
         widget_grid_data.col = col;
 
         this.add_to_gridmap(widget_grid_data);
+
         $widget.attr('data-row', row);
         $widget.attr('data-col', col);
-        this.update_widget_position(widget_grid_data, $widget);
+
+        var grfix_object= {};
+        grfix_object.gridmap = widget_grid_data;
+        grfix_object.widget = $widget;
+        this.grfix_queue.push(grfix_object);
+
+
         this.$changed = this.$changed.add($widget);
 
         return this;
@@ -3933,7 +3950,7 @@
 
                 this.remove_from_gridmap(widget_grid_data);
                 widget_grid_data.row = next_row;
-                this.add_to_gridmap(widget_grid_data);
+                this.update_widget_position(widget_grid_data, $widget);
                 $widget.attr('data-row', widget_grid_data.row);
                 this.$changed = this.$changed.add($widget);
 
@@ -4004,9 +4021,14 @@
                 return false;
             }
             this.remove_from_gridmap(widget_grid_data);
-
             widget_grid_data.row = next_row;
             this.update_widget_position(widget_grid_data, $widget);
+
+            var grfix_object = {};
+            grfix_object.gridmap = widget_grid_data;
+            grfix_object.widget = $widget;
+            this.grfix_queue.push(grfix_object);
+
             $widget.attr('data-row', widget_grid_data.row);
             this.$changed = this.$changed.add($widget);
 
@@ -4834,6 +4856,7 @@
     fn.generate_faux_grid = function (rows, cols) {
         this.faux_grid = [];
         this.gridmap = [];
+        this.grfix_queue = [];
         var col;
         var row;
         for (col = cols; col > 0; col--) {
